@@ -1,18 +1,54 @@
-# Uncomment this to pass the first stage
+# implemented by @NickPhilomath
+# thanks for Codecrafters.io for creating masterpiece learning platform.
+
 import socket
+
+BUFFER_SIZE = 1024
+
+
+# views to handle requests
+def home(request) -> str:
+    response = "HTTP/1.1 200 OK \r\n\r\n".encode()
+    return response
+
+def handle404(request) -> str:
+    response = "HTTP/1.1 404 Not Found \r\n\r\n".encode()
+    return response
+
+
+# this function returns specific function that 
+# is responsible to handle given url
+def get_url_view(urlpatterns, url):
+    for path in urlpatterns:
+        if path[0] == url:
+            return path[1]
+        
+    return handle404
 
 
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
-    # Uncomment this to pass the first stage
-    #
+    urlpatterns = [
+        ('/', home),
+    ]
+
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     conn, addr = server_socket.accept() # wait for client
     print("Accepted peer: ", addr)
 
-    response: str = "HTTP/1.1 200 OK \r\n\r\n".encode()
+    request = conn.recv(BUFFER_SIZE).decode()
+
+    start_line = request.split('\r\n')[0]
+
+    req_url = start_line.split(' ')[1]
+
+    print('request url: ', req_url)
+
+    view = get_url_view(urlpatterns, req_url)
+
+    response  = view(request)
 
     conn.send(response)
 
