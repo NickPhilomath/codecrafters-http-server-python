@@ -12,7 +12,7 @@ def main():
     conn, addr = server_socket.accept() # wait for client
     print("Accepted peer: ", addr)
 
-    response: str = "HTTP/1.1 200 OK \r\n \r\n".encode()
+    response: str = "HTTP/1.1 200 OK \r\n\r\n".encode()
 
     conn.send(response)
 
