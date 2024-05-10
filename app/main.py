@@ -16,12 +16,22 @@ def handle404(request) -> str:
     return response
 
 
+class Path:
+    def __init__(self, url, view) -> None:
+        self.url = url
+        self.view = view
+
+
+urlpatterns = [
+    Path('/', home),
+]
+
 # this function returns specific function that 
 # is responsible to handle given url
-def get_url_view(urlpatterns, url):
+def get_url_view(url):
     for path in urlpatterns:
-        if path[0] == url:
-            return path[1]
+        if path.url == url:
+            return path.view
         
     return handle404
 
@@ -29,10 +39,6 @@ def get_url_view(urlpatterns, url):
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
-
-    urlpatterns = [
-        ('/', home),
-    ]
 
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     conn, addr = server_socket.accept() # wait for client
@@ -46,7 +52,7 @@ def main():
 
     print('request url: ', req_url)
 
-    view = get_url_view(urlpatterns, req_url)
+    view = get_url_view(req_url)
 
     response  = view(request)
 
