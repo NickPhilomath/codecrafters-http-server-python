@@ -3,6 +3,7 @@
 
 import socket
 
+PORT_NUMBER = 4221
 BUFFER_SIZE = 1024
 
 
@@ -11,9 +12,18 @@ def home(request) -> str:
     response = "HTTP/1.1 200 OK \r\n\r\n".encode()
     return response
 
+def hello(request) -> str:
+    response = "HTTP/1.1 200 OK \r\n\r\n hello world".encode()
+    return response
+
 def handle404(request) -> str:
     response = "HTTP/1.1 404 Not Found \r\n\r\n".encode()
     return response
+
+
+class Request:
+    def __init__(self) -> None:
+        pass
 
 
 class Path:
@@ -24,6 +34,7 @@ class Path:
 
 urlpatterns = [
     Path('/', home),
+    Path('/hello', hello),
 ]
 
 # this function returns specific function that 
@@ -37,22 +48,22 @@ def get_url_view(url):
 
 
 def handle_server_request(request):
-    start_line = request.split('\r\n')[0]
+    start_line, headers, body, *other = request.split('\r\n')
 
-    req_url = start_line.split(' ')[1]
+    method, req_url, http_version, *other = start_line.split(' ')
+
+    # print(start_line, headers, body, other, sep=" ### ")
+    # print(method, url, http_v, sep=" ### ")
 
     view = get_url_view(req_url)
-
     response = view(request)
-
     return response
 
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
+    print(f"started server at port {PORT_NUMBER}.")
 
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
+    server_socket = socket.create_server(("localhost", PORT_NUMBER), reuse_port=True)
 
     conn, addr = server_socket.accept() # wait for client
     print("Accepted peer: ", addr)
