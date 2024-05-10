@@ -36,26 +36,29 @@ def get_url_view(url):
     return handle404
 
 
+def handle_server_request(request):
+    start_line = request.split('\r\n')[0]
+
+    req_url = start_line.split(' ')[1]
+
+    view = get_url_view(req_url)
+
+    response = view(request)
+
+    return response
+
+
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
+
     conn, addr = server_socket.accept() # wait for client
     print("Accepted peer: ", addr)
 
     request = conn.recv(BUFFER_SIZE).decode()
-
-    start_line = request.split('\r\n')[0]
-
-    req_url = start_line.split(' ')[1]
-
-    print('request url: ', req_url)
-
-    view = get_url_view(req_url)
-
-    response  = view(request)
-
+    response = handle_server_request(request)
     conn.send(response)
 
     print("Connection closed.")
