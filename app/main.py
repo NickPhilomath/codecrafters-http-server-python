@@ -93,14 +93,19 @@ def main():
 
     server_socket = socket.create_server(("localhost", PORT_NUMBER), reuse_port=True)
 
-    conn, addr = server_socket.accept() # wait for client
-    print("Accepted peer: ", addr)
+    while True:
+        try:
+            conn, addr = server_socket.accept() # wait for client
+            print("Accepted peer: ", addr)
 
-    request = conn.recv(BUFFER_SIZE).decode()
-    response = handle_server_request(request)
-    conn.send(response)
-
-    print("Connection closed.")
+            request = conn.recv(BUFFER_SIZE).decode()
+            response = handle_server_request(request)
+            conn.send(response)
+        
+        except KeyboardInterrupt:
+            print("Stopping server...")
+            server_socket.close()
+            break
 
 
 
