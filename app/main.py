@@ -2,6 +2,7 @@
 # thanks for Codecrafters.io for creating masterpiece learning platform.
 
 import socket
+from . import status
 
 PORT_NUMBER = 4221
 BUFFER_SIZE = 1024
@@ -56,6 +57,11 @@ class Request:
 
 
 class Response:
+    status_code_map = {
+        status.HTTP_200_OK: "OK",
+        status.HTTP_404_NOT_FOUND: "Not Found",
+    }
+
     headers = {
         "Content-Type": "text/plain",
         "Content-Length": 0
@@ -71,29 +77,31 @@ class Response:
         for h_key, h_value in self.headers.items():
             headers_raw += f"{h_key}: {h_value}\r\n"
 
-        return f"HTTP/1.1 {self.status} OK\r\n{headers_raw}\r\n{self.data}".encode()
+        status_code_text = self.status_code_map[self.status]
+
+        return f"HTTP/1.1 {self.status} {status_code_text}\r\n{headers_raw}\r\n{self.data}".encode()
 
 
 # views to handle requests
 def home(request: Request) -> Response:
-    return Response(status=200)
+    return Response(status=status.HTTP_200_OK)
 
 def hello(request: Request) -> Response:
     data = "hello world"
-    return Response(data, status=200)
+    return Response(data, status=status.HTTP_200_OK)
 
 def echo(request, url_vars_dic):
     msg = url_vars_dic.get('msg', '')
     msg_length = len(msg)
-    return Response(msg, status=200)
+    return Response(msg, status=status.HTTP_200_OK)
 
 def user_agent(request):
     user_agent = request.headers.get("User-Agent", "")
-    return Response(user_agent, status=200)
+    return Response(user_agent, status=status.HTTP_200_OK)
 
 
 def handle404(request: Request) -> Response:
-    return Response(status=404)
+    return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 urlpatterns = [
