@@ -65,9 +65,6 @@ class Response:
         self.status = status
 
     def make_raw(self) -> str:
-        # headers = "Content-Type: text/plain\r\n" + f"Content-Length: {msg_length}\r\n"
-        # f"HTTP/1.1 200 OK\r\n{headers}\r\n{msg}".encode()
-
         self.headers["Content-Length"] = len(self.data)
 
         headers_raw = ""
@@ -90,15 +87,20 @@ def echo(request, url_vars_dic):
     msg_length = len(msg)
     return Response(msg, status=200)
 
-def handle404(request) -> str:
-    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
-    return response
+def user_agent(request):
+    user_agent = request.headers.get("User-Agent", "")
+    return Response(user_agent, status=200)
+
+
+def handle404(request: Request) -> Response:
+    return Response(status=404)
 
 
 urlpatterns = [
     Path('/', home),
     Path('/hello', hello),
     Path('/echo/:msg', echo),
+    Path('/user-agent', user_agent),
 ]
 
 # this function returns specific function that 
