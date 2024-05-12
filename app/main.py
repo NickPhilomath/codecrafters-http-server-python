@@ -7,33 +7,6 @@ PORT_NUMBER = 4221
 BUFFER_SIZE = 1024
 
 
-# views to handle requests
-def home(request) -> str:
-    response = "HTTP/1.1 200 OK\r\n\r\n".encode()
-    return response
-
-def hello(request) -> str:
-    response = "HTTP/1.1 200 OK\r\n\r\nhello world".encode()
-    return response
-
-def echo(request, url_vars_dic):
-    msg = url_vars_dic.get('msg', '')
-    msg_length = len(msg)
-
-    headers = "Content-Type: text/plain\r\n" + f"Content-Length: {msg_length}\r\n"
-
-    return f"HTTP/1.1 200 OK\r\n{headers}\r\n{msg}".encode()
-
-def handle404(request) -> str:
-    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
-    return response
-
-
-class Request:
-    def __init__(self) -> None:
-        pass
-
-
 class Path:
     def __init__(self, url, view) -> None:
         self.url = url
@@ -61,6 +34,65 @@ class Path:
                 return {}, False
             
         return url_vars_dic, True
+    
+
+class Request:
+    def __init__(self, request_raw) -> None:
+        head, body, *_ = request_raw.split('\r\n\r\n')
+        head_lines = head.split('\r\n')
+        # get the first line, others are request headers
+        start_line = head_lines.pop(0)
+        method, req_url, http_version = start_line.split(' ')
+
+        headers_dic = {}
+        # prepare headers
+        for header in head_lines:
+            header_name, header_value = header.split(": ")
+            headers_dic[header_name] = header_value
+
+        self.method = method
+        self.url = req_url
+        self.headers = headers_dic
+
+
+class Response:
+    headers = {
+        "Content-Type": "text/plain",
+        "Content-Length": 0
+    }
+    def __init__(self, data = "", status = 200):
+        self.data = data
+        self.status = status
+
+    def make_raw(self) -> str:
+        # headers = "Content-Type: text/plain\r\n" + f"Content-Length: {msg_length}\r\n"
+        # f"HTTP/1.1 200 OK\r\n{headers}\r\n{msg}".encode()
+
+        self.headers["Content-Length"] = len(self.data)
+
+        headers_raw = ""
+        for h_key, h_value in self.headers.items():
+            headers_raw += f"{h_key}: {h_value}\r\n"
+
+        return f"HTTP/1.1 {self.status} OK\r\n{headers_raw}\r\n{self.data}".encode()
+
+
+# views to handle requests
+def home(request: Request) -> Response:
+    return Response(status=200)
+
+def hello(request: Request) -> Response:
+    data = "hello world"
+    return Response(data, status=200)
+
+def echo(request, url_vars_dic):
+    msg = url_vars_dic.get('msg', '')
+    msg_length = len(msg)
+    return Response(msg, status=200)
+
+def handle404(request) -> str:
+    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
+    return response
 
 
 urlpatterns = [
@@ -83,13 +115,11 @@ def get_url_view(url):
     return handle404
 
 
-def handle_server_request(request):
-    start_line, headers, body, *other = request.split('\r\n')
-    method, req_url, http_version, *other = start_line.split(' ')
-
-    view = get_url_view(req_url)
+def handle_server_request(request_raw):
+    request = Request(request_raw)
+    view = get_url_view(request.url)
     response = view(request)
-    return response
+    return response.make_raw()
 
 
 def main():
@@ -102,8 +132,8 @@ def main():
             conn, addr = server_socket.accept() # wait for client
             print("Accepted peer: ", addr)
 
-            request = conn.recv(BUFFER_SIZE).decode()
-            response = handle_server_request(request)
+            request_raw = conn.recv(BUFFER_SIZE).decode()
+            response = handle_server_request(request_raw)
             conn.send(response)
         
         except KeyboardInterrupt:
