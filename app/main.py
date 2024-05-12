@@ -43,6 +43,10 @@ class Path:
         pu_list = self.url.split('/') # path urls list
         ru_list = url.split('/') # request urls list
 
+        # check if urls sections are equal
+        if len(pu_list) != len(ru_list):
+            return {}, False
+
         url_vars_dic = {}  # we store url variable values here and later pass it to view
 
         for i in range(len(pu_list)):
@@ -103,7 +107,7 @@ def main():
             conn.send(response)
         
         except KeyboardInterrupt:
-            print("Stopping server...")
+            print("\nStopping server...")
             server_socket.close()
             break
 
