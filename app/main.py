@@ -22,7 +22,7 @@ def echo(request, url_vars_dic):
 
     headers = "Content-Type: text/plain\r\n" + f"Content-Length: {msg_length}\r\n"
 
-    return f"HTTP/1.1 200 OK\r\n{headers}{msg}".encode()
+    return f"HTTP/1.1 200 OK\r\n{headers}\r\n{msg}".encode()
 
 def handle404(request) -> str:
     response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
