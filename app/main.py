@@ -9,19 +9,23 @@ BUFFER_SIZE = 1024
 
 # views to handle requests
 def home(request) -> str:
-    response = "HTTP/1.1 200 OK \r\n\r\n".encode()
+    response = "HTTP/1.1 200 OK\r\n\r\n".encode()
     return response
 
 def hello(request) -> str:
-    response = "HTTP/1.1 200 OK \r\n\r\nhello world".encode()
+    response = "HTTP/1.1 200 OK\r\n\r\nhello world".encode()
     return response
 
 def echo(request, url_vars_dic):
     msg = url_vars_dic.get('msg', '')
-    return f"HTTP/1.1 200 OK \r\n\r\n{msg}".encode()
+    msg_length = len(msg)
+
+    headers = "Content-Type: text/plain\r\n" + f"Content-Length: {msg_length}\r\n"
+
+    return f"HTTP/1.1 200 OK\r\n{headers}{msg}".encode()
 
 def handle404(request) -> str:
-    response = "HTTP/1.1 404 Not Found \r\n\r\n".encode()
+    response = "HTTP/1.1 404 Not Found\r\n\r\n".encode()
     return response
 
 
